@@ -83,27 +83,34 @@ else: # e.g., github pages
 
 js.console.log(f"model_url: {model_url}")
 
+img_is_uploaded = st.file_uploader("Upload an image", type=["jpg","jpeg","png"])
 
-uploaded = st.file_uploader("Upload an image", type=["jpg","jpeg","png"])
-if uploaded is not None:
-    st.image(uploaded, caption="Input Image", use_container_width=True)
+# load model
+        
+try:
+    ensure_ort_loaded()
+
+    # Load/create session lazily
+    if ss["ort_session"] is None:
+        with st.spinner("Loading model…"):
+            resp = await js.fetch(model_url)
+            if not resp.ok:
+                raise RuntimeError(f"Fetch failed: {resp.status} {resp.statusText}")
+            ab = await resp.arrayBuffer()
+        with st.spinner("Creating session…"):
+            opts = js.eval("({ executionProviders: ['wasm'] })")
+            ss["ort_session"] = await js.ort.InferenceSession.create(ab, opts)
+
+except Exception as e:
+    st.error(f"Error: {e}")
+
+        
+if img_is_uploaded is not None:
+    st.image(img_is_uploaded, caption="Input Image", use_container_width=True)
 
     try:
-        ensure_ort_loaded()
-
-        # Load/create session lazily
-        if ss["ort_session"] is None:
-            with st.spinner("Loading model…"):
-                resp = await js.fetch(model_url)
-                if not resp.ok:
-                    raise RuntimeError(f"Fetch failed: {resp.status} {resp.statusText}")
-                ab = await resp.arrayBuffer()
-            with st.spinner("Creating session…"):
-                opts = js.eval("({ executionProviders: ['wasm'] })")
-                ss["ort_session"] = await js.ort.InferenceSession.create(ab, opts)
-
         # Prepare input tensor
-        img = Image.open(io.BytesIO(uploaded.getvalue()))
+        img = Image.open(io.BytesIO(img_is_uploaded.getvalue()))
         x = preprocess(img)                          # (1,3,H,W)
         ta = np_to_js_f32(x)
 
@@ -145,7 +152,8 @@ if uploaded is not None:
 
         flat = data.ravel(); k = min(5, flat.size)
         idxs = np.argsort(flat)[-k:][::-1]
-        st.success(f"Predicted Fear: {flat[idxs][0]:.0f}/100")
+        fear = np.max(np.min(flat[idxs][0], 100), 0)
+        st.success(f"Predicted Fear: {fear:.0f}/100")
     except Exception as e:
         st.error(f"Error: {e}")
 else:
