@@ -1,0 +1,35 @@
+services:
+  backend:
+    build:
+      context: backend
+      dockerfile: backend.dev.Dockerfile
+    image: spidernets-backend-dev
+    entrypoint:
+      [
+        "bash",
+        "-c",
+        "uvicorn main:app --proxy-headers --host 0.0.0.0 --env-file env_dev --port 8000 --reload",
+      ]
+    volumes:
+      - ./backend:/app
+    ports:
+      - "8000:8000"
+    restart: always
+    networks:
+      - spidernets-dev
+
+  frontend:
+    build:
+      context: frontend
+      dockerfile: frontend.dev.Dockerfile
+    image: spidernets-frontend-dev
+    restart: always
+    command: npm run dev
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    ports:
+      - "3000:3000"
+
+networks:
+  spidernets-dev:

@@ -1,0 +1,44 @@
+{
+  "compilerOptions": {
+    "target": "ES6",
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext"
+    ],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "forceConsistentCasingInFileNames": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "module": "esnext",
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "preserve",
+    "incremental": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": [
+        "./*"
+      ]
+    }
+  },
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    "pages/Dev.tsx~",
+    "pages/dev_ws.tsx~",
+    "pages/dev_props.tsx~",
+    "pages/dev_props.tsx~",
+    "eyetracking/WebSocketComponent.tsx~",
+    "eyetracking/types.ts~",
+    "eyetracking/WebSocket.tsx~",
+    "eyetracking/CalibrationDialogsSeconds.tsx~"
+, "pages/dev_replay2.tsx~", "pages/dev_replay.tsx~"  ],
+  "exclude": [
+    "node_modules"
+  ]
+}

@@ -1,0 +1,1 @@
+{"lr": 0.017955089805410447, "weight_decay": 0.00013421182815879078, "dropout": 0.41670726280200043, "n_epochs": 37, "n_epochs_hp_search_limit": 37, "n_extra_epochs": 5, "batch_size": 16, "n_layers": 3}

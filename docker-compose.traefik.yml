@@ -1,0 +1,48 @@
+version: "3"
+
+services:
+
+  backend:
+    build:
+      context: backend
+      dockerfile: backend.Dockerfile
+    image: spidernets-backend
+    restart: always
+    entrypoint:
+      [
+        "bash",
+        "-c",
+        "uvicorn main:app --proxy-headers --host 0.0.0.0 --env-file .env --port 8000 --root-path /spidernets-api --workers 4",
+      ]
+    volumes:
+      - ./backend:/app
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.spidernets-backend.rule=PathPrefix(`/spidernets-api`)"
+      - "traefik.http.services.spidernets-backend.loadbalancer.server.port=8000"
+      - "traefik.http.routers.spidernets-backend.entrypoints=web,websecure"
+      - "traefik.http.routers.spidernets-backend.tls=true"
+      - "traefik.http.middlewares.strip_spidernets.stripprefix.prefixes=/spidernets-api"
+      - "traefik.http.routers.spidernets-backend.middlewares=strip_spidernets@docker"
+      - "traefik.docker.network=traefik-network"
+    networks:
+      - traefik-network
+
+  frontend:
+    build:
+      context: frontend
+      dockerfile: frontend.Dockerfile
+    image: spidernets-frontend
+    restart: always
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.spidernets.rule=PathPrefix(`/spidernets`)"
+      - "traefik.http.services.spidernets.loadbalancer.server.port=3000"
+      - "traefik.http.routers.spidernets.entrypoints=web,websecure"
+      - "traefik.http.routers.spidernets.tls=true"
+    networks:
+      - traefik-network
+
+networks:
+  traefik-network:
+    external: true
