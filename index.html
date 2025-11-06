@@ -1,0 +1,143 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>SpiderNets: Estimating Fear Ratings</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@stlite/browser@0.85.1/build/stlite.css" />
+    <script type="module" src="https://cdn.jsdelivr.net/npm/@stlite/browser@0.85.1/build/stlite.js"></script>
+  </head>
+  <body>
+    <streamlit-app>
+import streamlit as st
+import numpy as np
+from PIL import Image
+import io
+import js
+
+CDN = "https://cdn.jsdelivr.net/npm/onnxruntime-web@1.19.0/dist/"
+INPUT_SIZE = (224, 224)   # (W, H)
+
+st.set_page_config(page_title="SpiderNets: Estimating Fear Ratings", page_icon="🤖")
+st.title("SpiderNets: Estimating Fear Ratings")
+
+ss = st.session_state
+ss.setdefault("ort_loaded", False)
+ss.setdefault("ort_session", None)
+
+def ensure_ort_loaded():
+    if not ss["ort_loaded"]:
+        js.importScripts(CDN + "ort.min.js")
+        # Force absolute helper paths; restrict to single-thread, no SIMD
+        js.ort.env.wasm.wasmPaths = CDN
+        js.ort.env.wasm.numThreads = 1
+        js.ort.env.wasm.simd = False
+        ss["ort_loaded"] = True
+
+def preprocess(img: Image.Image) -> np.ndarray:
+    # PIL resize expects (W,H)
+    img = img.convert("RGB").resize(INPUT_SIZE)
+    x = np.asarray(img, dtype=np.float32) / 255.0
+    mean = np.array([0.485, 0.456, 0.406], dtype=np.float32)
+    std  = np.array([0.229, 0.224, 0.225], dtype=np.float32)
+    x = (x - mean) / std
+    x = np.transpose(x, (2, 0, 1))              # HWC -> CHW
+    x = np.expand_dims(x, 0).astype(np.float32) # (1,3,H,W)
+    return x
+
+def np_to_js_f32(arr: np.ndarray):
+    arr = np.ascontiguousarray(arr, dtype=np.float32)
+    buf = memoryview(arr).tobytes()
+    ta = js.Float32Array.new(len(buf)//4)
+    js.Uint8Array.new(ta.buffer).set(js.Uint8Array.new(buf))
+    return ta
+
+origin = str(js.location.origin)
+path = str(js.location.pathname)
+js.console.log("origin:", js.location.origin)   # logs as a JS object
+js.console.log(f"origin (str): {origin}")
+js.console.log(f"path: {path}")
+if path.endswith("index.html"):
+    path = path[:-len("index.html")]
+if not origin.endswith("/"):
+    origin += "/"
+# if not path.endswith("/"):
+#    path += "/"
+# model_url = origin + path + "model.onnx"
+model_url = origin + "model.onnx"
+js.console.log(f"model_url: {model_url}")
+
+        
+# URL to model
+# model_url = "http://localhost:8001/model.onnx"
+     
+
+uploaded = st.file_uploader("Upload an image", type=["jpg","jpeg","png"])
+if uploaded is not None:
+    st.image(uploaded, caption="Input", use_container_width=True)
+
+    try:
+        ensure_ort_loaded()
+
+        # Load/create session lazily
+        if ss["ort_session"] is None:
+            with st.spinner("Fetching model…"):
+                resp = await js.fetch(model_url)
+                if not resp.ok:
+                    raise RuntimeError(f"Fetch failed: {resp.status} {resp.statusText}")
+                ab = await resp.arrayBuffer()
+            with st.spinner("Creating session…"):
+                opts = js.eval("({ executionProviders: ['wasm'] })")
+                ss["ort_session"] = await js.ort.InferenceSession.create(ab, opts)
+
+        # Prepare input tensor
+        img = Image.open(io.BytesIO(uploaded.getvalue()))
+        x = preprocess(img)                          # (1,3,H,W)
+        ta = np_to_js_f32(x)
+
+        # Build dims as a real JS Array (avoid borrowed proxy)
+        dims = js.Array.new()
+        dims.push(1); dims.push(3); dims.push(int(x.shape[2])); dims.push(int(x.shape[3]))
+
+        tensor = js.ort.Tensor.new("float32", ta, dims)
+
+        # Input/output names
+        in_names  = list(ss["ort_session"].inputNames.to_py())  if hasattr(ss["ort_session"], "inputNames")  else []
+        out_names = list(ss["ort_session"].outputNames.to_py()) if hasattr(ss["ort_session"], "outputNames") else []
+        in_name  = in_names[0]  if in_names  else "input"
+        out_name = out_names[0] if out_names else "output"
+
+        # Build feeds as a plain JS object via Reflect.set
+        feeds = js.eval("({})")
+        js.Reflect.set(feeds, in_name, tensor)
+
+        with st.spinner("Running…"):
+            results = await ss["ort_session"].run(feeds)
+
+        # Access output directly in JS, then convert only the data
+        out = js.Reflect.get(results, out_name)
+        if out is None:
+            # fallback: first property
+            keys = list(results.to_py().keys())
+            out = js.Reflect.get(results, keys[0])
+
+        # dims is a JS array; convert to Python list
+        shape = list(out.dims.to_py()) if hasattr(out, "dims") else None
+        # data is a TypedArray; to_py returns a Python list copy
+        data = np.array(out.data.to_py(), dtype=np.float32)
+        if shape:
+            try:
+                data = data.reshape(tuple(shape))
+            except Exception:
+                pass
+
+        flat = data.ravel(); k = min(5, flat.size)
+        idxs = np.argsort(flat)[-k:][::-1]
+        st.success(f"Predicted Fear: {flat[idxs][0]:.0f}/100")
+    except Exception as e:
+        st.error(f"Error: {e}")
+else:
+    st.caption("Upload a JPEG/PNG to enable inference.")
+    </streamlit-app>
+  </body>
+</html>
