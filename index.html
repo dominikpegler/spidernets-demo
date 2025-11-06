@@ -152,7 +152,9 @@ if img_is_uploaded is not None:
 
         flat = data.ravel(); k = min(5, flat.size)
         idxs = np.argsort(flat)[-k:][::-1]
-        fear = np.max(np.min(flat[idxs][0], 100), 0)
+        fear = flat[idxs][0]
+        fear = np.max((fear, 0))
+        fear = np.min((fear, 100))
         st.success(f"Predicted Fear: {fear:.0f}/100")
     except Exception as e:
         st.error(f"Error: {e}")
