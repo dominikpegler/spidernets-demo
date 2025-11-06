@@ -20,6 +20,15 @@ INPUT_SIZE = (224, 224)   # (W, H)
 
 st.set_page_config(page_title="SpiderNets: Estimating Fear Ratings", page_icon="🤖")
 st.title("SpiderNets: Estimating Fear Ratings")
+st.markdown(
+    "**Paper:** SpiderNets: Estimating Fear Ratings of Spider-Related Images with Vision Models  \n"
+    "**Authors:** D. Pegler, D. Steyrl, M. Zhang, A. Karner, J. Arato, F. Scharnowski, F. Melinscak  \n"
+    "**DOI:** [10.48550/arXiv.2509.04889](https://doi.org/10.48550/arXiv.2509.04889)  ·  "
+#    "[arXiv](https://arxiv.org/abs/xxxx.xxxxx)  ·  "
+#    "[Code](https://github.com/user/repo)",
+)
+st.markdown("---")
+
 
 ss = st.session_state
 ss.setdefault("ort_loaded", False)
