@@ -57,20 +57,23 @@ path = str(js.location.pathname)
 js.console.log("origin:", js.location.origin)   # logs as a JS object
 js.console.log(f"origin (str): {origin}")
 js.console.log(f"path: {path}")
-if path.endswith("index.html"):
-    path = path[:-len("index.html")]
-if not origin.endswith("/"):
-    origin += "/"
-# if not path.endswith("/"):
-#    path += "/"
-# model_url = origin + path + "model.onnx"
-model_url = origin + "model.onnx"
+
+
+DEVELOPMENT = False
+if DEVELOPMENT:
+    if not origin.endswith("/"):
+        origin += "/"
+    model_url = origin + "model.onnx"
+
+else: # e.g., github pages
+    if path.endswith("index.html"):
+        path = path[:-len("index.html")]
+    if not path.endswith("/"):
+       path += "/"
+    model_url = origin + path + "model.onnx"
+
 js.console.log(f"model_url: {model_url}")
 
-        
-# URL to model
-# model_url = "http://localhost:8001/model.onnx"
-     
 
 uploaded = st.file_uploader("Upload an image", type=["jpg","jpeg","png"])
 if uploaded is not None:
