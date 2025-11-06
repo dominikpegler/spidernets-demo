@@ -86,14 +86,14 @@ js.console.log(f"model_url: {model_url}")
 
 uploaded = st.file_uploader("Upload an image", type=["jpg","jpeg","png"])
 if uploaded is not None:
-    st.image(uploaded, caption="Input", use_container_width=True)
+    st.image(uploaded, caption="Input Image", use_container_width=True)
 
     try:
         ensure_ort_loaded()
 
         # Load/create session lazily
         if ss["ort_session"] is None:
-            with st.spinner("Fetching model…"):
+            with st.spinner("Loading model…"):
                 resp = await js.fetch(model_url)
                 if not resp.ok:
                     raise RuntimeError(f"Fetch failed: {resp.status} {resp.statusText}")
