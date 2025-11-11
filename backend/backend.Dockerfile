@@ -1,9 +1,21 @@
 FROM python:3.11-bullseye
 
-COPY . /app
 WORKDIR /app
 
-RUN pip install --upgrade pip 
-RUN pip install --no-cache-dir --upgrade -r requirements.txt
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        libgl1-mesa-glx \
+        libjpeg-dev \
+        libpng-dev \
+        libtiff-dev \
+        build-essential \
+        pkg-config && \
+    rm -rf /var/lib/apt/lists/*
+
+COPY requirements.txt .
+RUN pip install --upgrade pip
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY . .
 
 EXPOSE 8000

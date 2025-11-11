@@ -93,7 +93,7 @@ pydantic_core==2.41.5
 Pygments==2.19.2
 pyparsing==3.2.5
 python-dateutil==2.9.0.post0
-python-dotenv==1.2.1.
+python-dotenv==1.2.1
 python-json-logger==4.0.0
 pytorch-gradcam==0.2.1
 pytz==2025.2
@@ -142,3 +142,4 @@ websocket-client==1.9.0
 wheel==0.45.1
 widgetsnbextension==4.0.15
 python-multipart>=0.0.9
+gunicorn>=23.0.0

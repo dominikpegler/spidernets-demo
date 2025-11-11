@@ -307,7 +307,7 @@ const ImageUploader: React.FC<Props> = ({ onFileSelected }) => {
             </div>
           )}
           {score !== null && !loading && !error && (
-            <div className="result">Value: {score.toFixed(2)}</div>
+            <div className="result">Estimated Fear: {score.toFixed(0)}/100</div>
           )}
         </div>
       )}
