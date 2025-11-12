@@ -33,7 +33,11 @@ export default function Home() {
           </div>
           <div>
             <b>DOI: </b>
-            <a href="https://doi.org/10.48550/arXiv.2509.04889" target="_blank">
+            <a
+              href="https://doi.org/10.48550/arXiv.2509.04889"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
               10.48550/arXiv.2509.04889
             </a>
           </div>
