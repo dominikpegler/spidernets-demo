@@ -14,9 +14,30 @@ export default function Home() {
       </Head>
       <main className="container">
         <h1 className="title">SpiderNets: Estimating Fear Ratings</h1>
-        <p className="subtitle">
-          Upload an image to preview. Inference disabled.
-        </p>
+        <div
+          className="subtitle"
+          style={{
+            display: "flex",
+            justifyContent: "flex-start",
+            alignItems: "center",
+            flexDirection: "column",
+          }}
+        >
+          <div>
+            <b>Paper:</b> SpiderNets: Estimating Fear Ratings of Spider-Related
+            Images with Vision Models{" "}
+          </div>
+          <div>
+            <b>Authors:</b> D. Pegler, D. Steyrl, M. Zhang, A. Karner, J. Arato,
+            F. Scharnowski, F. Melinscak{" "}
+          </div>
+          <div>
+            <b>DOI: </b>
+            <a href="https://doi.org/10.48550/arXiv.2509.04889" target="_blank">
+              10.48550/arXiv.2509.04889
+            </a>
+          </div>
+        </div>
         <ImageUploader />
       </main>
     </>

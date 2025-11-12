@@ -29,8 +29,6 @@ from gradcam import (
 from model_loader import create_model
 
 
-img_path = Path("checkpoint", "Sp_004.jpg")
-
 is_transformer = True
 device = "cpu"
 
@@ -119,7 +117,12 @@ app = FastAPI(
     redoc_url=None,  # Disable redoc
 )
 
-origins = ["http://localhost", "http://localhost:8080", "http://localhost:3000"]
+origins = [
+    "http://localhost",
+    "http://localhost:8080",
+    "http://localhost:3000",
+    "https://spidernets-frontend-bac8ccd0g4b5fydw.swedencentral-01.azurewebsites.net"
+    ]
 
 app.add_middleware(
     CORSMiddleware,
