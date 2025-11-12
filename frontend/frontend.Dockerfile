@@ -1,18 +1,26 @@
-#FROM debian:bullseye
-FROM node:18-alpine
-
-COPY package*.json /app/
+# Stage 1: Build the Next.js Application
+FROM node:18-alpine AS builder
 WORKDIR /app
 
-#RUN apt update || : && apt install curl -y
-#RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash -
-#RUN apt install -y nodejs 
+COPY package.json package-lock.json ./
 RUN npm install
 
 COPY . .
-
 RUN npm run build
 
-EXPOSE 3000
+# ---
+# Stage 2: Serve the Application (Minimal Runtime)
+FROM node:18-alpine
+WORKDIR /app
 
-CMD ["npm", "run", "start"]
+ENV NODE_ENV production
+ENV NEXT_TELEMETRY_DISABLED 1
+
+COPY --from=builder /app/.next ./.next
+COPY --from=builder /app/public ./public
+
+COPY --from=builder /app/package.json ./package.json
+RUN npm install --production
+
+CMD ["npm", "start"]
+EXPOSE 3000
